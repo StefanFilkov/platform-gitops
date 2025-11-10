@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: visits-service
+  labels:
+    app: visits-service
+spec:
+  selector:
+    matchLabels:
+      app: visits-service
+  replicas: 2
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      labels:
+        app: visits-service
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: visits-service
+        image: ghcr.io/stefanfilkov/petclinic/visits-service:latest
+        imagePullPolicy: "Always"
+        resources:
+          limits:
+            memory: "512Mi"
+        envFrom:
+        - configMapRef:
+            name: visits-service-configmap
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: visits-service
+  labels:
+    app: visits-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: "visits-service"
+  selector:
+    app: visits-service
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: visits-service
+  annotations:
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+    nginx.ingress.kubernetes.io/server-tokens: "false"
+    nginx.ingress.kubernetes.io/fail-timeout: "45s"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - visits-service.domashno.party
+      secretName: wild-tinqin-prp-be-ys-net
+  rules:
+    - host: visits-service.domashno.party
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: visits-service
+                port:
+                  number: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: visits-service-configmap
+data:

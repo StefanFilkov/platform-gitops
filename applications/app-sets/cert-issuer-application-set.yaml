@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cert-issuer-add-cert-to-issue
+  namespace: argocd
+spec:
+  generators:
+  - list:
+      elements:
+      - namespace: app
+        path: tools/cert-issuer/app/
+        releaseName: hotel
+        repoURL: https://github.com/StefanFilkov/platform-gitops
+        targetRevision: main
+      
+  template:
+    metadata:
+      name: '{{releaseName}}'
+    spec:
+      project: default
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+        - PruneLast=true
+        - ApplyOutOfSyncOnly=true
+      sources:
+      - path: '{{path}}'
+        repoURL: '{{repoURL}}'
+        targetRevision: '{{targetRevision}}'
+      destination:
+        namespace: '{{namespace}}'
+        server: "https://kubernetes.default.svc"
+---

@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-domashno-party
+  namespace: app
+spec:
+  secretName: wildcard-domashno-party-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-dns
+  commonName: "*.domashno.party"
+  dnsNames:
+  - "*.domashno.party"
+  - "domashno.party"

@@ -1,0 +1,79 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: petclinic
+  namespace: argocd
+spec:
+  generators:
+  - list:
+      elements:
+      - name: admin-server
+        namespace: app
+        path: applications/app-k8s/admin-server
+        repoURL: https://github.com/StefanFilkov/platform-gitops
+        targetRevision: main
+        releaseName: petclinic
+      - name: api-gateway
+        namespace: app
+        path: applications/app-k8s/api-gateway
+        repoURL: https://github.com/StefanFilkov/platform-gitops
+        targetRevision: main
+        releaseName: petclinic
+      - name: config-server
+        namespace: app
+        path: applications/app-k8s/config-server
+        repoURL: https://github.com/StefanFilkov/platform-gitops
+        targetRevision: main
+        releaseName: petclinic
+      - name: customers-service
+        namespace: app
+        path: applications/app-k8s/customers-service
+        repoURL: https://github.com/StefanFilkov/platform-gitops
+        targetRevision: main
+        releaseName: petclinic
+      - name: discovery-server
+        namespace: app
+        path: applications/app-k8s/discovery-server
+        repoURL: https://github.com/StefanFilkov/platform-gitops
+        targetRevision: main
+        releaseName: petclinic
+      - name: genai-service
+        namespace: app
+        path: applications/app-k8s/genai-service
+        repoURL: https://github.com/StefanFilkov/platform-gitops
+        targetRevision: main
+        releaseName: petclinic
+      - name: vets-service
+        namespace: app
+        path: applications/app-k8s/vets-service
+        repoURL: https://github.com/StefanFilkov/platform-gitops
+        targetRevision: main
+        releaseName: petclinic
+      - name: visits-service
+        namespace: app
+        path: applications/app-k8s/visits-service
+        repoURL: https://github.com/StefanFilkov/platform-gitops
+        targetRevision: main
+        releaseName: petclinic
+
+  template:
+    metadata:
+      name: '{{releaseName}}'
+    spec:
+      project: default
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+        - PruneLast=true
+        - ApplyOutOfSyncOnly=true
+      sources:
+      - path: '{{path}}'
+        repoURL: '{{repoURL}}'
+        targetRevision: '{{targetRevision}}'
+      destination:
+        namespace: '{{namespace}}'
+        server: "https://kubernetes.default.svc"
+---

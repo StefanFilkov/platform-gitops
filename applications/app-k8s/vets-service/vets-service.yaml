@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vets-service
+  labels:
+    app: vets-service
+spec:
+  selector:
+    matchLabels:
+      app: vets-service
+  replicas: 2
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      labels:
+        app: vets-service
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: vets-service
+        image: ghcr.io/stefanfilkov/petclinic/vets-service:latest
+        imagePullPolicy: "Always"
+        resources:
+          limits:
+            memory: "512Mi"
+        envFrom:
+        - configMapRef:
+            name: vets-service-configmap
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vets-service
+  labels:
+    app: vets-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: "vets-service"
+  selector:
+    app: vets-service
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vets-service
+  annotations:
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+    nginx.ingress.kubernetes.io/server-tokens: "false"
+    nginx.ingress.kubernetes.io/fail-timeout: "45s"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - vets-service.domashno.party
+      secretName: wild-tinqin-prp-be-ys-net
+  rules:
+    - host: vets-service.domashno.party
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vets-service
+                port:
+                  number: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vets-service-configmap
+data:
